@@ -167,20 +167,19 @@ function SummaryQuery() {
   const [tag, setTag] = useState('');
   const [shouldRead, setShouldRead] = useState(false);
   const [error, setError] = useState<string | null>(null);
-
-  const agentId = didInput ? didToAgentId(didInput) : undefined;
+  const [agentId, setAgentId] = useState<bigint | null>(null);
 
   const { data, error: readError, isFetching } = useReadContract({
     address: VALIDATION_CONTRACT_ADDRESS as `0x${string}`,
     abi: VALIDATION_ABI,
     functionName: 'getSummary',
-    args: agentId ? [
+    args: agentId !== null ? [
       agentId,
       validatorAddresses ? validatorAddresses.split(',').map(a => a.trim() as `0x${string}`) : [],
       tag ? tag as Hex : '0x0000000000000000000000000000000000000000000000000000000000000000' as Hex,
     ] : undefined,
     query: {
-      enabled: shouldRead && agentId !== undefined,
+      enabled: shouldRead && agentId !== null,
     },
   });
 
@@ -189,10 +188,16 @@ function SummaryQuery() {
       setError('Please enter an Agent DID');
       return;
     }
-    if (!agentId) {
+
+    try {
+      const parsed = didToAgentId(didInput);
+      setAgentId(parsed);
+    } catch {
       setError('Invalid Agent DID format');
+      setShouldRead(false);
       return;
     }
+
     setShouldRead(true);
     setError(null);
   };
@@ -202,6 +207,7 @@ function SummaryQuery() {
     setValidatorAddresses('');
     setTag('');
     setShouldRead(false);
+    setAgentId(null);
     setError(null);
   };
 
@@ -219,6 +225,7 @@ function SummaryQuery() {
           onChange={(e) => {
             setDidInput(e.target.value);
             setShouldRead(false);
+            setAgentId(null);
             setError(null);
           }}
           placeholder="did:codatta:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
@@ -261,7 +268,7 @@ function SummaryQuery() {
       <div className="flex gap-2">
         <button
           onClick={handleQuery}
-          disabled={isFetching || !didInput.trim() || !agentId}
+          disabled={isFetching || !didInput.trim()}
           className="flex-1 px-4 py-2 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
         >
           {isFetching ? 'Querying...' : 'Query Summary'}
@@ -302,16 +309,15 @@ function AgentValidationsQuery() {
   const [didInput, setDidInput] = useState('');
   const [shouldRead, setShouldRead] = useState(false);
   const [error, setError] = useState<string | null>(null);
-
-  const agentId = didInput ? didToAgentId(didInput) : undefined;
+  const [agentId, setAgentId] = useState<bigint | null>(null);
 
   const { data, error: readError, isFetching } = useReadContract({
     address: VALIDATION_CONTRACT_ADDRESS as `0x${string}`,
     abi: VALIDATION_ABI,
     functionName: 'getAgentValidations',
-    args: agentId ? [agentId] : undefined,
+    args: agentId !== null ? [agentId] : undefined,
     query: {
-      enabled: shouldRead && agentId !== undefined,
+      enabled: shouldRead && agentId !== null,
     },
   });
 
@@ -320,10 +326,16 @@ function AgentValidationsQuery() {
       setError('Please enter an Agent DID');
       return;
     }
-    if (!agentId) {
+
+    try {
+      const parsed = didToAgentId(didInput);
+      setAgentId(parsed);
+    } catch {
       setError('Invalid Agent DID format');
+      setShouldRead(false);
       return;
     }
+
     setShouldRead(true);
     setError(null);
   };
@@ -331,6 +343,7 @@ function AgentValidationsQuery() {
   const handleClear = () => {
     setDidInput('');
     setShouldRead(false);
+    setAgentId(null);
     setError(null);
   };
 
@@ -348,6 +361,7 @@ function AgentValidationsQuery() {
           onChange={(e) => {
             setDidInput(e.target.value);
             setShouldRead(false);
+            setAgentId(null);
             setError(null);
           }}
           placeholder="did:codatta:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
@@ -358,7 +372,7 @@ function AgentValidationsQuery() {
       <div className="flex gap-2">
         <button
           onClick={handleQuery}
-          disabled={isFetching || !didInput.trim() || !agentId}
+          disabled={isFetching || !didInput.trim()}
           className="flex-1 px-4 py-2 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
         >
           {isFetching ? 'Querying...' : 'Query Validations'}
